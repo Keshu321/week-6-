@@ -297,7 +297,7 @@ After restarting the action server, it is confirmed that feedback is now publish
 ```
 ros2 action send_goal --feedback fibonacci action_tutorials_interfaces/action/Fibonacci "{order: 5}"
 ```
-![image](https://user-images.githubusercontent.com/92859942/196423114-123a9316-5cc3-4414-b6ca-8a224c57eb55.png)
+![image](https://user-images.githubusercontent.com/92859942/196525373-16375850-54d0-4876-bd85-3c1dde1780de.png)
 
 ![image](https://user-images.githubusercontent.com/92859942/196423218-b616c53d-b6d8-41f0-9ba0-ac8505eedad5.png)
 
@@ -305,6 +305,9 @@ ros2 action send_goal --feedback fibonacci action_tutorials_interfaces/action/Fi
 ## B. Writing an action client
 
 The action client will also be limited to a single file. Next, create a new file with the name fibonacci action client.py. To the new file, add the following boilerplate code:
+
+![image](https://user-images.githubusercontent.com/92859942/196526351-b9ed22d2-30c1-4e63-914e-1804b06a44a3.png)
+
 
 ```
 import rclpy
@@ -343,6 +346,9 @@ if __name__ == '__main__':
     main()
 ```
 
+![image](https://user-images.githubusercontent.com/92859942/196526226-ecab7673-e459-4bc6-87d5-93fa4b44172f.png)
+
+
 Let's test our action client by first launching the earlier-built action server:
 
 ```
@@ -367,6 +373,8 @@ The action client start up and quickly finish but we don't get any feedback.
 [INFO] [fibonacci_action_server]: Feedback: array('i', [0, 1, 1, 2, 3, 5])
 # etc.
 ```
+
+![image](https://user-images.githubusercontent.com/92859942/196529165-c1e40929-d9aa-4d1e-b268-6d1c88cf6b83.png)
 
 ## B.1 getting the result 
 
@@ -432,6 +440,10 @@ Try running our Fibonacci action client while an action server is active on a di
 ```
 python3 fibonacci_action_client.py
 ```
+
+![image](https://user-images.githubusercontent.com/92859942/196529909-83fa97db-60aa-4829-a23f-3aa5cdb0d2c3.png)
+
+
 ## B.2 getting feedback 
 
 Here is the whole code for collecting some feedback regarding the goals we provide from the action server once the action client is allowed to communicate the objectives:
@@ -501,7 +513,188 @@ Everything is ready for us. Your screen should display feedback if we run our ac
 python3 fibonacci_action_client.py
 ```
 
+![image](https://user-images.githubusercontent.com/92859942/196530529-f7db7fc6-4050-4ab1-909a-a81f8d353c00.png)
+
 we created an action. 
 
 # 3. Composing multiple nodes in a single process
+
+## To discover avilable components
+
+In order to check the available components in the workspace, we run the following commands.
+
+```
+ros2 component types
+```
+
+![image](https://user-images.githubusercontent.com/92859942/196531590-83d5f202-93df-427a-8510-f329d24088c9.png)
+
+## Run-time composition using ROS services with a publisher and subscriber
+
+Run-time composition using ROS services with a publisher and subscriber
+
+```
+ros2 run rclcpp_components component_container
+```
+Using the ros2 command-line tools, we run the following command in the second terminal to show the name of the component as an output and confirm that the container is operating.
+
+```
+ros2 component list
+```
+![image](https://user-images.githubusercontent.com/92859942/196532868-bef5e720-419d-412b-96e7-5a385d98277c.png)
+
+After this step, in the second terminal, we load the talker component:
+
+```
+ros2 component load /ComponentManager composition composition::Talker
+```
+
+After this, we run following code in the second terminal in order to load the listener component:
+
+```
+ros2 component load /ComponentManager composition composition::Listener
+```
+![image](https://user-images.githubusercontent.com/92859942/196533209-376650cb-b9cc-40b3-afeb-a41394c1b62f.png)
+
+
+![image](https://user-images.githubusercontent.com/92859942/196533016-73b99ccb-e614-4452-923e-2bcdc1f0b252.png)
+
+This command will return the node name and the distinctive ID of the loaded component:
+
+Finally we can run the ros2 command line utility to inspect the state of the container:
+
+```
+ros2 component list
+```
+We can see the result as follows:
+
+```
+/ComponentManager
+   1  /talker
+   2  /listener
+```
+## Run-time composition using ROS services with a server and client
+The steps are pretty similar to what we performed with the talker and listener.
+
+Our first terminal is where we execute:
+
+```
+ros2 run rclcpp_components component_container
+```
+and after that, in the second terminal, we run following commands to see server and client source code:
+
+
+```
+ros2 component load /ComponentManager composition composition::Server
+ros2 component load /ComponentManager composition composition::Client
+```
+
+![image](https://user-images.githubusercontent.com/92859942/196535552-bf513e3b-85ae-4f5d-b0dd-806cdade9c13.png)
+
+
+![image](https://user-images.githubusercontent.com/92859942/196535376-146ee3c7-31fb-4220-8e91-8fa1448f901f.png)
+
+## Compile-time composition using ROS services
+
+This example demonstrates how the same shared libraries may be used to create a single executable that runs a number of different components.
+
+All four of the aforementioned parts—talker, listener, server, and client—are present in the executable.
+
+in one terminal 
+
+```
+ros2 run composition manual_composition
+```
+![image](https://user-images.githubusercontent.com/92859942/196536062-320156c7-c06f-4b5e-9d73-6a22e88c7dda.png)
+
+## Run-time composition using dlopen
+
+By constructing a generic container process and explicitly passing the libraries to load without using ROS interfaces, this demonstration provides an alternative to run-time composition. Each library will be opened by the procedure, and one instance of each "rclcpp::Node" class will be created in the library's source code.
+
+
+```
+ros2 run composition dlopen_composition `ros2 pkg prefix composition`/lib/libtalker_component.so `ros2 pkg prefix composition`/lib/liblistener_component.so
+```
+
+![image](https://user-images.githubusercontent.com/92859942/196536362-d01b5815-4470-4c80-8315-1a8a79b8a98f.png)
+
+## Composition using launch actions
+
+While the command line tools are helpful for troubleshooting and diagnosing component setups, starting a group of components at once is frequently more practical. We can make use of ros2 launch's functionality to automate this process.
+
+
+```
+ros2 launch composition composition_demo.launch.py
+```
+
+![image](https://user-images.githubusercontent.com/92859942/196536675-9ed0ad18-9eae-44ed-afd6-8390c876428e.png)
+
+
+# 4. Creating a launch file
+
+We use the rqt graph and turtlesim packages that we previously installed in order to produce a launch file.
+
+## setup and writing the lunch file 
+
+we should make new directory and create new file named turtlesim_mimic_launch.py and use the mention code in the file
+
+```
+mkdir launch
+```
+
+![image](https://user-images.githubusercontent.com/92859942/196538918-5213acd4-e1a3-42c7-aa12-9138c1a4668a.png)
+
+code:
+```
+from launch import LaunchDescription
+from launch_ros.actions import Node
+
+def generate_launch_description():
+    return LaunchDescription([
+        Node(
+            package='turtlesim',
+            namespace='turtlesim1',
+            executable='turtlesim_node',
+            name='sim'
+        ),
+        Node(
+            package='turtlesim',
+            namespace='turtlesim2',
+            executable='turtlesim_node',
+            name='sim'
+        ),
+        Node(
+            package='turtlesim',
+            executable='mimic',
+            name='mimic',
+            remappings=[
+                ('/input/pose', '/turtlesim1/turtle1/pose'),
+                ('/output/cmd_vel', '/turtlesim2/turtle1/cmd_vel'),
+            ]
+        )
+    ])
+```
+![image](https://user-images.githubusercontent.com/92859942/196539540-b2972fdf-9eba-40fb-b565-f38c457bc884.png)
+
+## ros2 launch
+
+In order to run the launch file created, we enter into the earlier created directory and run the following commands:
+
+```
+cd launch
+ros2 launch turtlesim_mimic_launch.py
+```
+
+![image](https://user-images.githubusercontent.com/92859942/196540724-cc3ee018-c4b9-4db1-923a-4cdae1009647.png)
+
+In order to see the sytem in action, we open a new terminal and run the ros2 topic pub command on /turtlesim1/turtle1/cmd_vel topic to get the first turtle moving.
+
+
+
+
+
+
+
+
+
 
