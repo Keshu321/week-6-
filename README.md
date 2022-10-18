@@ -687,7 +687,98 @@ ros2 launch turtlesim_mimic_launch.py
 
 ![image](https://user-images.githubusercontent.com/92859942/196540724-cc3ee018-c4b9-4db1-923a-4cdae1009647.png)
 
-In order to see the sytem in action, we open a new terminal and run the ros2 topic pub command on /turtlesim1/turtle1/cmd_vel topic to get the first turtle moving.
+
+
+To see the system in action, open a new terminal and run the ros2 topic pub command on the /turtlesim1/turtle1/cmd_vel topic to get the first turtle moving:
+
+```
+ros2 topic pub -r 1 /turtlesim1/turtle1/cmd_vel geometry_msgs/msg/Twist "{linear: {x: 2.0, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: -1.8}}"
+```
+
+![image](https://user-images.githubusercontent.com/92859942/196543152-454bb774-8a15-4f21-a07c-772d8c91fc03.png)
+
+
+## Introspect the system with rqt_graph
+Open the new terminal without closing the system and we run rqt_graph.
+
+```
+rqt_graph
+```
+![image](https://user-images.githubusercontent.com/92859942/196543919-a18b22f0-45ac-46ce-8562-56c5bf725dac.png)
+
+# 5. Integrating launch files into ROS2 packages
+
+## Creating a package
+
+Firstly, we create a workspace for the package:
+
+```
+mkdir -p launch_ws/src
+cd launch_ws/src
+```
+and create a python package:
+
+```
+ros2 pkg create py_launch_example --build-type ament_python
+```
+
+##  Creating the structure to hold launch files
+
+
+After creating the packages, it should be looking as follows for python package:
+And utilizing the data files setup argument, we must tell Python's setup tools about our launch files in order to colcon to launch files.
+
+We enter these codes in the setup.py file:
+
+```
+import os
+from glob import glob
+from setuptools import setup
+
+package_name = 'py_launch_example'
+
+setup(
+    # Other parameters ...
+    data_files=[
+        # ... Other data files
+        # Include all launch files.
+        (os.path.join('share', package_name), glob('launch/*launch.[pxy][yma]*'))
+    ]
+)
+```
+## Writing the launch file
+
+Inside your launch directory, create a new launch file called my_script_launch.py. _launch.py is recommended, but not required, as the file suffix for Python launch files.
+
+Your launch file should define the generate_launch_description() function which returns a launch.LaunchDescription() to be used by the ros2 launch verb.
+
+```
+import launch
+import launch_ros.actions
+
+def generate_launch_description():
+    return launch.LaunchDescription([
+        launch_ros.actions.Node(
+            package='demo_nodes_cpp',
+            executable='talker',
+            name='talker'),
+  ])
+```
+## Building and running the launch file
+
+We go to top-level of the workspace and build the file using:
+```
+colcon build
+```
+After the colcon build has been successful and you’ve sourced the workspace, you should be able to run the launch file as follows:
+
+```
+ros2 launch py_launch_example my_script_launch.py
+```
+
+# 6. Using Substitutions
+
+
 
 
 
