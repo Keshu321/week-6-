@@ -721,11 +721,16 @@ and create a python package:
 ```
 ros2 pkg create py_launch_example --build-type ament_python
 ```
+![image](https://user-images.githubusercontent.com/92859942/196546845-3949bfdc-369c-4fe0-8592-2e0b0276c8c9.png)
 
 ##  Creating the structure to hold launch files
 
 
 After creating the packages, it should be looking as follows for python package:
+
+![image](https://user-images.githubusercontent.com/92859942/196548000-b2ecafcd-c546-4302-95a7-ba26d89a1e3e.png)
+
+
 And utilizing the data files setup argument, we must tell Python's setup tools about our launch files in order to colcon to launch files.
 
 We enter these codes in the setup.py file:
