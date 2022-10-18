@@ -70,6 +70,9 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "action/Fibonacci.action"
 )
 ```
+
+![image](https://user-images.githubusercontent.com/92859942/196399859-1850b216-e41d-4f50-b839-eae66b37e20c.png)
+
 We must also include the necessary dependencies in our package.xml file:
 
 ```
@@ -79,6 +82,7 @@ We must also include the necessary dependencies in our package.xml file:
 
 <member_of_group>rosidl_interface_packages</member_of_group>
 ```
+![image](https://user-images.githubusercontent.com/92859942/196400072-98a5e077-6d92-4968-b69a-72f93def9c51.png)
 
 After all these, we will be able to build the package containing the Fibonacci action definition as follows:
 
@@ -88,6 +92,7 @@ cd ~/ros2_ws
 # Build
 colcon build
 ```
+![image](https://user-images.githubusercontent.com/92859942/196400205-679c41c4-2cfe-4043-a82e-6cb7a2582beb.png)
 
 Using the command line tool, we can verify that our action was built successfully:
 
@@ -98,6 +103,7 @@ Using the command line tool, we can verify that our action was built successfull
 # Check that our action definition exists
 ros2 interface show action_tutorials_interfaces/action/Fibonacci
 ```
+![image](https://user-images.githubusercontent.com/92859942/196400347-d41749e6-8623-40e8-ae21-7ca92a9eb7d4.png)
 
 # Writing an action server and client
 
@@ -142,17 +148,22 @@ def main(args=None):
 if __name__ == '__main__':
     main()
 ```
+![image](https://user-images.githubusercontent.com/92859942/196408665-05016d5a-1579-48c0-89a8-82281b4c7b84.png)
 
 Now lets run our server:
 
 ```
 python3 fibonacci_action_server.py
 ```
+![image](https://user-images.githubusercontent.com/92859942/196408828-3dca3ca2-da5a-4213-a7bd-1088c66a1c65.png)
+
+
 We can communicate a goal via the command line interface to another terminal:
 
 ```
 ros2 action send_goal fibonacci action_tutorials_interfaces/action/Fibonacci "{order: 5}"
 ```
+![image](https://user-images.githubusercontent.com/92859942/196408915-ec7e1ec2-b5f9-4de1-850c-5c0759ad2a0a.png)
 
 In the terminal that is running the action server, you should see the logged message "Executing objective..." followed by a warning that the goal state was not established. If the goal handle state is not set in the execute callback, the aborted state is assumed by default.
 
@@ -167,7 +178,15 @@ def execute_callback(self, goal_handle):
     result = Fibonacci.Result()
     return result
 ```
+
+![image](https://user-images.githubusercontent.com/92859942/196409881-5735d95b-e904-48c3-a96d-60b1fa6fa9af.png)
+
+
 You should see the goal completed with the status SUCCEED if you restart the action server and send another goal at this point.
+
+![image](https://user-images.githubusercontent.com/92859942/196410744-0ce7dc67-5180-40c7-bd02-c676b583876c.png)
+
+![image](https://user-images.githubusercontent.com/92859942/196411241-935ba425-5d25-4269-a02f-955dfa40e930.png)
 
 Let's now make sure that our target execution computes and returns the specified Fibonacci sequence:
 ```
@@ -192,10 +211,16 @@ def execute_callback(self, goal_handle):
 
     return result
 ```
+![image](https://user-images.githubusercontent.com/92859942/196412099-3ec2fe82-38f2-474d-aea8-ec6b3cc2d3c9.png)
+
 
 The sequence is calculated, put in the result message field, and we move on to the return.
 
 Restart the action server and send a new goal. The objective must be fulfilled with the anticipated outcomes appearing in the appropriate order. The successfully() function on the goal handle can be used to demonstrate the goal's accomplishment:
+
+![image](https://user-images.githubusercontent.com/92859942/196419464-3c0803f0-cecc-40be-8b14-bbacd0626d8a.png)
+
+![image](https://user-images.githubusercontent.com/92859942/196419527-44e35601-b4a5-455c-900c-454fed01979c.png)
 
 
 ## A.1 publishing feedback: 
@@ -272,6 +297,10 @@ After restarting the action server, it is confirmed that feedback is now publish
 ```
 ros2 action send_goal --feedback fibonacci action_tutorials_interfaces/action/Fibonacci "{order: 5}"
 ```
+![image](https://user-images.githubusercontent.com/92859942/196423114-123a9316-5cc3-4414-b6ca-8a224c57eb55.png)
+
+![image](https://user-images.githubusercontent.com/92859942/196423218-b616c53d-b6d8-41f0-9ba0-ac8505eedad5.png)
+
 
 ## B. Writing an action client
 
