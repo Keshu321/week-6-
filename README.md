@@ -784,8 +784,337 @@ ros2 launch py_launch_example my_script_launch.py
 # 6. Using Substitutions
 
 
+We create a new package of build_type ament_python named launch_tutorial :
+
+```
+ros2 pkg create launch_tutorial --build-type ament_python
+```
+and inside of that package, we create a directory called launch.
+
+```
+mkdir launch_tutorial/launch
+```
+The setup.py file is then modified and adjustments are included to ensure a successful installation of the launch file.
+
+```
+import os
+from glob import glob
+from setuptools import setup
+
+package_name = 'launch_tutorial'
+
+setup(
+    # Other parameters ...
+    data_files=[
+        # ... Other data files
+        # Include all launch files.
+        (os.path.join('share', package_name), glob('launch/*launch.[pxy][yma]*'))
+    ]
+)
+```
+## Parent Launch File
+
+After the above steps, we created a launch file named : example_main.launch.py in the launch folder of the launch_tutorial directory with the following codes in it:
+
+```
+from launch_ros.substitutions import FindPackageShare
+
+from launch import LaunchDescription
+from launch.actions import IncludeLaunchDescription
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import PathJoinSubstitution, TextSubstitution
 
 
+def generate_launch_description():
+    colors = {
+        'background_r': '200'
+    }
+
+    return LaunchDescription([
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([
+                PathJoinSubstitution([
+                    FindPackageShare('launch_tutorial'),
+                    'example_substitutions.launch.py'
+                ])
+            ]),
+            launch_arguments={
+                'turtlesim_ns': 'turtlesim2',
+                'use_provided_red': 'True',
+                'new_background_r': TextSubstitution(text=str(colors['background_r']))
+            }.items()
+        )
+    ])
+```
+
+## Substitutions example launch file
+
+The same folder gains a new document called example substitutions.launch.py.
+
+```
+from launch_ros.actions import Node
+
+from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument, ExecuteProcess, TimerAction
+from launch.conditions import IfCondition
+from launch.substitutions import LaunchConfiguration, PythonExpression
+
+
+def generate_launch_description():
+    turtlesim_ns = LaunchConfiguration('turtlesim_ns')
+    use_provided_red = LaunchConfiguration('use_provided_red')
+    new_background_r = LaunchConfiguration('new_background_r')
+
+    turtlesim_ns_launch_arg = DeclareLaunchArgument(
+        'turtlesim_ns',
+        default_value='turtlesim1'
+    )
+    use_provided_red_launch_arg = DeclareLaunchArgument(
+        'use_provided_red',
+        default_value='False'
+    )
+    new_background_r_launch_arg = DeclareLaunchArgument(
+        'new_background_r',
+        default_value='200'
+    )
+
+    turtlesim_node = Node(
+        package='turtlesim',
+        namespace=turtlesim_ns,
+        executable='turtlesim_node',
+        name='sim'
+    )
+    spawn_turtle = ExecuteProcess(
+        cmd=[[
+            'ros2 service call ',
+            turtlesim_ns,
+            '/spawn ',
+            'turtlesim/srv/Spawn ',
+            '"{x: 2, y: 2, theta: 0.2}"'
+        ]],
+        shell=True
+    )
+    change_background_r = ExecuteProcess(
+        cmd=[[
+            'ros2 param set ',
+            turtlesim_ns,
+            '/sim background_r ',
+            '120'
+        ]],
+        shell=True
+    )
+    change_background_r_conditioned = ExecuteProcess(
+        condition=IfCondition(
+            PythonExpression([
+                new_background_r,
+                ' == 200',
+                ' and ',
+                use_provided_red
+            ])
+        ),
+        cmd=[[
+            'ros2 param set ',
+            turtlesim_ns,
+            '/sim background_r ',
+            new_background_r
+        ]],
+        shell=True
+    )
+
+    return LaunchDescription([
+        turtlesim_ns_launch_arg,
+        use_provided_red_launch_arg,
+        new_background_r_launch_arg,
+        turtlesim_node,
+        spawn_turtle,
+        change_background_r,
+        TimerAction(
+            period=2.0,
+            actions=[change_background_r_conditioned],
+        )
+    ])
+```
+## Building the package
+
+We run the build command in the root of the workspace.
+
+```
+colcon build
+```
+## Launching Example
+
+Now we can use the ros2 launch command to execute the example main.launch.py file.
+
+```
+ros2 launch launch_tutorial example_main.launch.py
+```
+
+![image](https://user-images.githubusercontent.com/92859942/196817954-cefdc716-4489-4e12-b119-6576ff9e1d2b.png)
+
+A blue backdrop is used while starting a turtlesim node. Following that, a second turtle hatches, and the backgrounds are purple and pink, respectively.
+
+# 7. Using Event Handlers
+ 
+ Event handler example launch file
+ 
+ We created a new file named: example_event_handlers.launch.py in the same directory.. i.e. inside launch folder of launch_tutorial package.
+
+```
+from launch_ros.actions import Node
+
+from launch import LaunchDescription
+from launch.actions import (DeclareLaunchArgument, EmitEvent, ExecuteProcess,
+                            LogInfo, RegisterEventHandler, TimerAction)
+from launch.conditions import IfCondition
+from launch.event_handlers import (OnExecutionComplete, OnProcessExit,
+                                OnProcessIO, OnProcessStart, OnShutdown)
+from launch.events import Shutdown
+from launch.substitutions import (EnvironmentVariable, FindExecutable,
+                                LaunchConfiguration, LocalSubstitution,
+                                PythonExpression)
+
+
+def generate_launch_description():
+    turtlesim_ns = LaunchConfiguration('turtlesim_ns')
+    use_provided_red = LaunchConfiguration('use_provided_red')
+    new_background_r = LaunchConfiguration('new_background_r')
+
+    turtlesim_ns_launch_arg = DeclareLaunchArgument(
+        'turtlesim_ns',
+        default_value='turtlesim1'
+    )
+    use_provided_red_launch_arg = DeclareLaunchArgument(
+        'use_provided_red',
+        default_value='False'
+    )
+    new_background_r_launch_arg = DeclareLaunchArgument(
+        'new_background_r',
+        default_value='200'
+    )
+
+    turtlesim_node = Node(
+        package='turtlesim',
+        namespace=turtlesim_ns,
+        executable='turtlesim_node',
+        name='sim'
+    )
+    spawn_turtle = ExecuteProcess(
+        cmd=[[
+            FindExecutable(name='ros2'),
+            ' service call ',
+            turtlesim_ns,
+            '/spawn ',
+            'turtlesim/srv/Spawn ',
+            '"{x: 2, y: 2, theta: 0.2}"'
+        ]],
+        shell=True
+    )
+    change_background_r = ExecuteProcess(
+        cmd=[[
+            FindExecutable(name='ros2'),
+            ' param set ',
+            turtlesim_ns,
+            '/sim background_r ',
+            '120'
+        ]],
+        shell=True
+    )
+    change_background_r_conditioned = ExecuteProcess(
+        condition=IfCondition(
+            PythonExpression([
+                new_background_r,
+                ' == 200',
+                ' and ',
+                use_provided_red
+            ])
+        ),
+        cmd=[[
+            FindExecutable(name='ros2'),
+            ' param set ',
+            turtlesim_ns,
+            '/sim background_r ',
+            new_background_r
+        ]],
+        shell=True
+    )
+
+    return LaunchDescription([
+        turtlesim_ns_launch_arg,
+        use_provided_red_launch_arg,
+        new_background_r_launch_arg,
+        turtlesim_node,
+        RegisterEventHandler(
+            OnProcessStart(
+                target_action=turtlesim_node,
+                on_start=[
+                    LogInfo(msg='Turtlesim started, spawning turtle'),
+                    spawn_turtle
+                ]
+            )
+        ),
+        RegisterEventHandler(
+            OnProcessIO(
+                target_action=spawn_turtle,
+                on_stdout=lambda event: LogInfo(
+                    msg='Spawn request says "{}"'.format(
+                        event.text.decode().strip())
+                )
+            )
+        ),
+        RegisterEventHandler(
+            OnExecutionComplete(
+                target_action=spawn_turtle,
+                on_completion=[
+                    LogInfo(msg='Spawn finished'),
+                    change_background_r,
+                    TimerAction(
+                        period=2.0,
+                        actions=[change_background_r_conditioned],
+                    )
+                ]
+            )
+        ),
+        RegisterEventHandler(
+            OnProcessExit(
+                target_action=turtlesim_node,
+                on_exit=[
+                    LogInfo(msg=(EnvironmentVariable(name='USER'),
+                            ' closed the turtlesim window')),
+                    EmitEvent(event=Shutdown(
+                        reason='Window closed'))
+                ]
+            )
+        ),
+        RegisterEventHandler(
+            OnShutdown(
+                on_shutdown=[LogInfo(
+                    msg=['Launch was asked to shutdown: ',
+                        LocalSubstitution('event.reason')]
+                )]
+            )
+        ),
+    ])
+```
+
+![image](https://user-images.githubusercontent.com/92859942/196819121-44a0f48f-af1e-4c63-b295-b701ad84adf5.png)
+
+## Building and Running the Command
+ 
+ After adding the file, we go back to the root of the workspace and run the build command there.
+
+```
+colcon build
+```
+ 
+ 
+It is crucial to source the package and execute the following commands for the output after building:
+
+ros2 launch example event handlers.launch.py launch tutorial Use provided red:=True, turtlesim ns:='turtlesim3', and new background r:=200
+
+![image](https://user-images.githubusercontent.com/92859942/196819215-88d3c78d-2b44-4e8c-b7b5-4685f6a5a414.png)
+
+
+It spawns the second turtle and starts a turtlesim node with a blue backdrop. The background color then changes to pink and then purple. When the turtlesim window closes, the launch file also shuts down.
 
 
 
