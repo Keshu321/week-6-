@@ -1,3 +1,15 @@
+CONTENT 
+ MANAGING DEPENDENCIES WITH ROSDEP
+ CREATING AN ACTION
+ WRITING AN ACTION SERVER AND CLIENT 
+ COMPOSING MULTIPLE NODES IN A SINGLE PROCESS
+ LAUNCH 
+     - Creating a launch file.
+     -Launching and monitoring multiple nodes
+     - Using substitutions
+     - Using event handlers
+
+
 # 1. Managing Dependencies with rosdep
 
 How does the rosdep tool work? We can utilize the software now that we understand the basics of rosdep, package.xml, and rosdistro. Before using rosdep for the first time, it must first be initialized using:
