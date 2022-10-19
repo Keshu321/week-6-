@@ -1,9 +1,15 @@
-CONTENT 
+CONTENT :
+
  MANAGING DEPENDENCIES WITH ROSDEP
+ 
  CREATING AN ACTION
+ 
  WRITING AN ACTION SERVER AND CLIENT 
+ 
  COMPOSING MULTIPLE NODES IN A SINGLE PROCESS
- LAUNCH 
+ 
+ LAUNCH :
+ 
      - Creating a launch file.
      -Launching and monitoring multiple nodes
      - Using substitutions
